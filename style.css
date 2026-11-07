@@ -286,3 +286,6 @@
 @media(max-width:480px){.header-kakao img{width:19px;height:19px}}
 
 @media(max-width:760px){.header-kakao{display:none}}
+
+.contact p{word-break:keep-all;text-wrap:pretty}
+@media(max-width:760px){.contact-copy-break{display:none}}
