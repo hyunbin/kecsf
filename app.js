@@ -2,7 +2,19 @@ const reduced = window.matchMedia('(prefers-reduced-motion: reduce)');
 const header = document.querySelector('.header');
 const hero = document.querySelector('.hero');
 const heroEmblem = document.querySelector('.hero-emblem > svg');
-const headerEmblem = document.querySelector('.header-emblem');
+// Use the exact same artwork for the moving copy, including the opening beam.
+const oldHeaderEmblem = document.querySelector('.header-emblem');
+const headerEmblem = heroEmblem.cloneNode(true);
+headerEmblem.classList.add('header-emblem');
+headerEmblem.setAttribute('aria-hidden', 'true');
+// Keep SVG references unique when both instances are in the document.
+headerEmblem.innerHTML = headerEmblem.innerHTML.replaceAll('hero-', 'header-');
+oldHeaderEmblem.replaceWith(headerEmblem);
+function restingLogoCenter() {
+  let y = heroEmblem.parentElement.offsetHeight / 2;
+  for (let el = heroEmblem.parentElement; el; el = el.offsetParent) y += el.offsetTop;
+  return y;
+}
 const visuals = [...document.querySelectorAll('.visual-zoom')];
 const clamp = (value, min=0, max=1) => Math.min(max, Math.max(min, value));
 let pending = false;
@@ -16,14 +28,15 @@ function update() {
   const mark = heroEmblem.getBoundingClientRect();
   const barCenter = header.getBoundingClientRect().height / 2;
   const markY = mark.top + mark.height / 2;
-  const dockStart = 130;
-  const dockEnd = 270;
+  const dockStart = Math.max(0, Math.min(130, restingLogoCenter() - barCenter - 150));
+  const dockEnd = dockStart + 140;
   const travel = clamp((window.scrollY - dockStart) / (dockEnd - dockStart));
   const dock = travel * travel * (3 - 2 * travel);
-  const handoff = clamp(travel * 5);
-  headerEmblem.style.setProperty('--emblem-y', `${Math.max(0, markY - barCenter) * (1 - dock)}px`);
-  headerEmblem.style.setProperty('--emblem-scale', 1 + (mark.height / headerEmblem.offsetHeight - 1) * (1 - dock));
-  headerEmblem.style.setProperty('--emblem-opacity', handoff);
+  // No overlapping, differently sized copies during the handoff.
+  const handoff = window.scrollY > dockStart ? 1 : 0;
+  headerEmblem.style.setProperty('--emblem-y', `${(markY - barCenter) * (1 - dock)}px`);
+  headerEmblem.style.setProperty('--emblem-scale', 1 + (mark.height / parseFloat(getComputedStyle(headerEmblem).height) - 1) * (1 - dock));
+  headerEmblem.style.setProperty('--emblem-opacity', handoff * (1 - clamp(window.scrollY / hero.offsetHeight) * .65 * (1 - dock)));
   heroEmblem.style.setProperty('--hero-emblem-opacity', 1 - handoff);
 
   visuals.forEach(el => {
