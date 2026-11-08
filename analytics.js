@@ -1,6 +1,7 @@
 (() => {
   const measurementId = document.querySelector('meta[name="ga-measurement-id"]')?.content.trim();
-  const local = ['localhost', '127.0.0.1', '[::1]'].includes(location.hostname);
+  const local = ['localhost', '127.0.0.1', '[::1]'].includes(location.hostname)
+    || /^(10\.|192\.168\.|172\.(1[6-9]|2[0-9]|3[01])\.)/.test(location.hostname);
   const configured = /^G-[A-Z0-9]+$/.test(measurementId || '');
   // Local previews expose events for inspection without sending test traffic.
   window.dataLayer = window.dataLayer || [];
